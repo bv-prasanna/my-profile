@@ -565,21 +565,27 @@ gt.onclick=()=>scrollTo({top:0,behavior:rm?'auto':'smooth'});
 /* enquiry form */
 /* To receive enquiries directly in your inbox without opening WhatsApp or a mail app, create a free form endpoint
    (for example at web3forms.com or formspree.io) and paste its URL (and access key, if it gives one) below. */
-const FORM={endpoint:'',accessKey:''};
-const f=$('#enq'),fs=$('#fs'),WA='919844274556',EM='bv.prasannakumar@gmail.com',hasEP=!!FORM.endpoint;
+const FORM={endpoint:'/api/enquiry'};
+const f=$('#enq'),fs=$('#fs'),WA='919844274556',EM='bv.prasannakumar@gmail.com',hasEP=true;
 $('#sendEP').hidden=!hasEP;$('#sendWA').hidden=hasEP;$('#sendEM').hidden=hasEP;
 function txt(){const d=new FormData(f);return ['New project enquiry from my portfolio site','','Name: '+d.get('name'),'Contact: '+d.get('contact'),'I need: '+d.get('need'),'Budget: '+(d.get('budget')||'Not sure yet'),'Timeline: '+(d.get('time')||'Flexible'),'','Project details:',d.get('msg')].join('\n')}
 function valid(){if(f.reportValidity())return true;fs.textContent='Please fill in the highlighted fields.';return false}
 async function copyText(t){try{await navigator.clipboard.writeText(t)}catch(e){const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();try{document.execCommand('copy')}catch(_){}a.remove()}}
 $('#sendWA').onclick=()=>{if(!valid())return;window.open('https://wa.me/'+WA+'?text='+encodeURIComponent(txt()),'_blank','noopener');fs.textContent='WhatsApp is opening with your enquiry. Press send there to deliver it.'};
-$('#sendEM').onclick=()=>{if(!valid())return;location.href='mailto:'+EM+'?subject='+encodeURIComponent('Project enquiry: '+new FormData(f).get('need'))+'&body='+encodeURIComponent(txt());fs.textContent='If your email app did not open, press Copy details and email them to '+EM+'.'};
+$('#sendEM').onclick=()=>{if(!valid())return;f.requestSubmit();};
 $('#cpd').onclick=async()=>{if(!valid())return;await copyText(txt());fs.textContent='Details copied. Paste them into any email or chat.'};
 f.addEventListener('submit',async e=>{
- e.preventDefault();if(!hasEP||!valid())return;
- const fd=new FormData(f);if(FORM.accessKey)fd.append('access_key',FORM.accessKey);fd.append('subject','Project enquiry from portfolio site');
- fs.textContent='Sending...';
- try{const r=await fetch(FORM.endpoint,{method:'POST',body:fd,headers:{Accept:'application/json'}});if(!r.ok)throw 0;f.reset();fs.textContent='Thank you. Your enquiry has been sent and I will get back to you soon.'}
- catch(_){fs.textContent='Sorry, that did not go through. Please use WhatsApp or email instead.'}
+ e.preventDefault();if(!valid())return;
+ const buttons=[$('#sendEM'),$('#sendEP')];buttons.forEach(b=>b.disabled=true);
+ fs.textContent='Sending your enquiry...';
+ try{
+  const data=Object.fromEntries(new FormData(f).entries());
+  const r=await fetch(FORM.endpoint,{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify(data)});
+  const result=await r.json().catch(()=>({}));
+  if(!r.ok||!result.ok)throw new Error(result.error||'Unable to send your enquiry');
+  f.reset();fs.textContent='Thank you! Your enquiry was submitted successfully.';
+ }catch(err){fs.textContent=(err?.message||'Unable to send right now')+'. Please use WhatsApp if the problem continues.';}
+ finally{buttons.forEach(b=>b.disabled=false);}
 });
 </script>
 </body>
