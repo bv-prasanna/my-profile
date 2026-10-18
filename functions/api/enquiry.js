@@ -14,8 +14,8 @@ export async function onRequestPost({request,env}){
   if(!body||typeof body!=='object'||Array.isArray(body))return response(400,{error:'Invalid enquiry request'});
   // Honeypot. Treat bots as accepted without sending or indicating a block.
   if(body.botcheck)return response(200,{ok:true});
-  const name=field(body.name,120),contact=field(body.contact,254),need=field(body.need,120),msg=field(body.msg,6000),budget=field(body.budget,100),time=field(body.time,100);
-  if(name.length<2||!NEEDS.has(need)||msg.length<5||!(/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact)||/^\+?[0-9\s()\-]{8,20}$/.test(contact)))return response(400,{error:'Please complete the enquiry with a valid contact.'});
+  const name=field(body.name,120),email=field(body.email,254),phone=field(body.phone,24),need=field(body.need,120),msg=field(body.msg,6000),budget=field(body.budget,100),time=field(body.time,100);
+  if(name.length<2||!NEEDS.has(need)||msg.length<5||!(/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))||(phone&&!/^\+?[0-9\s()\-]{8,20}$/.test(phone)))return response(400,{error:'Please complete the enquiry with a valid contact.'});
   if(env.TURNSTILE_SECRET){
     const token=field(body.turnstileToken,3000);
     if(!token)return response(403,{error:'Verification required'});
@@ -24,9 +24,9 @@ export async function onRequestPost({request,env}){
       const data=await v.json();if(!data.success)return response(403,{error:'Verification failed'});
     }catch{return response(502,{error:'Verification unavailable'});}
   }
-  const details=[['Name',name],['Contact',contact],['Service',need],['Budget',budget||'Not specified'],['Timeline',time||'Not specified'],['Project details',msg]].map(([k,v])=>k+': '+v).join('\n\n');
+  const details=[['Name',name],['Email',email],['Mobile',phone||'Not provided'],['Service',need],['Budget',budget||'Not specified'],['Timeline',time||'Not specified'],['Project details',msg]].map(([k,v])=>k+': '+v).join('\n\n');
   try{
-    const sent=await fetch('https://api.resend.com/emails',{method:'POST',headers:{authorization:'Bearer '+env.RESEND_API_KEY,'content-type':'application/json'},body:JSON.stringify({from:env.ENQUIRY_FROM,to:[TO],subject:'Website project enquiry: '+need,text:details})});
+    const sent=await fetch('https://api.resend.com/emails',{method:'POST',headers:{authorization:'Bearer '+env.RESEND_API_KEY,'content-type':'application/json'},body:JSON.stringify({from:env.ENQUIRY_FROM,to:[TO],subject:'Website project enquiry: '+need,text:details,reply_to:email})});
     if(!sent.ok){console.error('Enquiry provider HTTP status:',sent.status);return response(502,{error:'Unable to deliver email. Please use WhatsApp.'});}
     const result=await sent.json();if(!result.id)return response(502,{error:'Email provider did not confirm sending.'});
     return response(200,{ok:true});
