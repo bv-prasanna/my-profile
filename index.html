@@ -421,7 +421,8 @@ nav ul .btn{text-align:center;margin-top:8px}
 <form class="enq rv" id="enq" aria-label="Project enquiry form">
 <h3>Project enquiry</h3>
 <label>Your name<input name="name" required autocomplete="name"></label>
-<label>Phone or email<input name="contact" required autocomplete="email" placeholder="How can I reach you?"></label>
+<label>Email address<input name="email" type="email" required maxlength="254" autocomplete="email" placeholder="you@example.com"></label>
+<label>Mobile number (optional)<input name="phone" type="tel" maxlength="24" autocomplete="tel" placeholder="+91 98765 43210"></label>
 <label class="full">What do you need?<select name="need" required><option value="" disabled selected>Choose one</option><option>Enterprise application</option><option>Software platform or marketplace</option><option>Mobile app</option><option>Web app or portal</option><option>Business website</option><option>Technical advice or review</option><option>Something else</option></select></label>
 <label>Budget range<select name="budget"><option value="">Not sure yet</option><option>Under ₹50,000</option><option>₹50,000 to ₹2 lakh</option><option>₹2 lakh to ₹10 lakh</option><option>Above ₹10 lakh</option></select></label>
 <label>When do you want to start?<select name="time"><option value="">Flexible</option><option>Immediately</option><option>Within a month</option><option>In 1 to 3 months</option></select></label>
@@ -567,8 +568,8 @@ gt.onclick=()=>scrollTo({top:0,behavior:rm?'auto':'smooth'});
    (for example at web3forms.com or formspree.io) and paste its URL (and access key, if it gives one) below. */
 const FORM={endpoint:'/api/enquiry'};
 const f=$('#enq'),fs=$('#fs'),WA='919844274556',EM='bv.prasannakumar@gmail.com',hasEP=true;
-$('#sendEP').hidden=!hasEP;$('#sendWA').hidden=hasEP;$('#sendEM').hidden=hasEP;
-function txt(){const d=new FormData(f);return ['New project enquiry from my portfolio site','','Name: '+d.get('name'),'Contact: '+d.get('contact'),'I need: '+d.get('need'),'Budget: '+(d.get('budget')||'Not sure yet'),'Timeline: '+(d.get('time')||'Flexible'),'','Project details:',d.get('msg')].join('\n')}
+$('#sendEP').hidden=true;$('#sendWA').hidden=false;$('#sendEM').hidden=false;
+function txt(){const d=new FormData(f);return ['New project enquiry from my portfolio site','','Name: '+d.get('name'),'Email: '+d.get('email'),'Mobile: '+(d.get('phone')||'Not provided'),'I need: '+d.get('need'),'Budget: '+(d.get('budget')||'Not sure yet'),'Timeline: '+(d.get('time')||'Flexible'),'','Project details:',d.get('msg')].join('\n')}
 function valid(){if(f.reportValidity())return true;fs.textContent='Please fill in the highlighted fields.';return false}
 async function copyText(t){try{await navigator.clipboard.writeText(t)}catch(e){const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();try{document.execCommand('copy')}catch(_){}a.remove()}}
 $('#sendWA').onclick=()=>{if(!valid())return;window.open('https://wa.me/'+WA+'?text='+encodeURIComponent(txt()),'_blank','noopener');fs.textContent='WhatsApp is opening with your enquiry. Press send there to deliver it.'};
